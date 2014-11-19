@@ -186,18 +186,18 @@ public class MainActivity extends BaseActivity {
 		Map<String, Object> injectMap = new HashMap<String, Object>();
 		injectMap.put("appItems", this.appListAdapter.getAppItems());
 		injectMap.put("context", this);
-		injectMap.put("startDate", DateUtils.getGTMDateTime());
+		injectMap.put("startDate", DateUtils.getGMTDateTime());
 
 		int port = Integer.parseInt(txtPort.getText().toString());
 		webServer = new WebServer(port, new UrlregexMapping(), null);
 
 		// 下载 图标 应用详细
-		webServer.addHandler("/download/(.*)", "com.sin.android.appshare.handler.ShareHandler.download", injectMap);
-		webServer.addHandler("/appicon/([^/]*)", "com.sin.android.appshare.handler.ShareHandler.appicon", injectMap);
-		webServer.addHandler("/appinfo/([^/]*)", "com.sin.android.appshare.handler.ShareHandler.appinfo", injectMap);
+		webServer.addHandler("/download/(.*)/.*", "com.sin.android.appshare.handler.ShareHandler.download", injectMap);
+		webServer.addHandler("/appicon/([^/]*)/.*", "com.sin.android.appshare.handler.ShareHandler.appicon", injectMap);
+		webServer.addHandler("/appinfo/([^/]*)/.*", "com.sin.android.appshare.handler.ShareHandler.appinfo", injectMap);
 
 		// assets 文件请求处理
-		webServer.addHandler("/(.*[.html|.css|.js|.png|.ico])", "com.sin.android.appshare.handler.ShareHandler.assetFile", injectMap);
+		webServer.addHandler("/(.*[.html|.css|.js|.png|.ico|.svg|.svgz|.ttf|.eot|.woff])", "com.sin.android.appshare.handler.ShareHandler.assetFile", injectMap);
 		webServer.addHandler("/.*", "com.sin.android.appshare.handler.ShareHandler.index", injectMap);
 		if (webServer.start()) {
 			txtPort.setEnabled(false);
@@ -212,7 +212,7 @@ public class MainActivity extends BaseActivity {
 				String url = String.format("http://%s:%d", "127.0.0.1", port);
 				this.txtUrl.setText(Html.fromHtml(String.format("<a href=\"%s\">%s</a>", url, url)));
 				txtUrl.setVisibility(View.VISIBLE);
-				saftToast(getResources().getString(R.string.shareokbut), Toast.LENGTH_LONG);
+				safeToast(getResources().getString(R.string.shareokbut), Toast.LENGTH_LONG);
 			}
 		} else {
 			this.message(R.string.sharefail);

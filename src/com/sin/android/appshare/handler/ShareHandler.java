@@ -22,26 +22,24 @@ public class ShareHandler extends BaseHandler {
 	public Context context;
 	public List<AppItem> appItems;
 	public Date startDate;
-	private static boolean usingCache = false;
+	private static boolean usingCache = true;
 
 	public boolean needNew() {
 		if (usingCache == false)
 			return true;
 		responseHeader.set("Last-Modified", DateUtils.toGMTString());
-		Date sinceDate = DateUtils.fromGTMString(requestHeader.get("If-Modified-Since"));
+		Date sinceDate = DateUtils.fromGMTString(requestHeader.get("If-Modified-Since"));
 		return sinceDate == null || (sinceDate.getTime() / 1000) < (startDate.getTime() / 1000 - 10);
 	}
 
 	public String index() {
-		if (needNew() == false)
-			respose304();
 		String res = null;
 		StringBuffer sb = new StringBuffer();
 		String itemTpl = stringFromAssets("tpappitem.html");
 		for (AppItem appItem : appItems) {
 			if (appItem.selected == false)
 				continue;
-			String item = itemTpl.replace("$id", "" + appItem.id).replace("$name", appItem.name);
+			String item = itemTpl.replace("$id", "" + appItem.id).replace("$name", appItem.name).replace("$pkgname", appItem.pkgname);
 			sb.append(item);
 			sb.append("\n");
 		}
@@ -87,13 +85,13 @@ public class ShareHandler extends BaseHandler {
 			File file = new File(appItem.apkdir);
 			FileInputStream inputStream = new FileInputStream(file);
 			this.responseHeader.set("Content-Disposition", "attachment; filename=\"" + appItem.pkgname + ".apk\"");
-			
+
 			// response apk
 			responseStream(inputStream, -1, file.length(), "application/vnd.android.package-archive");
 			inputStream.close();
 			webServer.log("download pkg %s successed!", id);
 			String msg = String.format(context.getResources().getString(R.string.downedmsg), appItem.name);
-			((MainActivity) context).saftToast(msg);
+			((MainActivity) context).safeToast(msg);
 		} catch (Exception e) {
 			webServer.log("download pkg %s failed!", id);
 			webServer.err(e);
@@ -109,7 +107,7 @@ public class ShareHandler extends BaseHandler {
 			AppItem appItem = this.appItems.get(Integer.parseInt(id));
 			String tpl = stringFromAssets("tpappinfo.html");
 			if (tpl != null) {
-				res = tpl.replace("$id", "" + appItem.id).replace("$name", appItem.name).replace("$info", appItem.info);
+				res = tpl.replace("$id", "" + appItem.id).replace("$name", appItem.name).replace("$info", appItem.info).replace("$pkgname", appItem.pkgname);
 			}
 		} catch (Exception e) {
 			webServer.err(e);
@@ -118,6 +116,8 @@ public class ShareHandler extends BaseHandler {
 	}
 
 	private String stringFromAssets(String filename) {
+		if (needNew() == false)
+			respose304();
 		String res = null;
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(context.getAssets().open(filename)));
@@ -155,6 +155,21 @@ public class ShareHandler extends BaseHandler {
 		} else if (filename.endsWith(".ico")) {
 			// png
 			this.setContentType("image/x-icon");
+		} else if (filename.endsWith(".svg")) {
+			// png
+			this.setContentType("image/svg");
+		} else if (filename.endsWith(".svgz")) {
+			// png
+			this.setContentType("image/svgz");
+		} else if (filename.endsWith(".ico")) {
+			// png
+			this.setContentType("image/x-icon");
+		} else if (filename.endsWith(".ttf")) {
+			// png
+			this.setContentType("font/ttf");
+		} else if (filename.endsWith(".woff")) {
+			// png
+			this.setContentType("font/woff");
 		}
 		try {
 			InputStream inputStream = context.getAssets().open(filename);
